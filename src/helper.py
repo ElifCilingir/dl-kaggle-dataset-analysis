@@ -151,20 +151,25 @@ class Helper:
     @staticmethod
     def last_line(path) -> str:
         f = open(path)
-        x = f.readlines()[-1]
+        lines = f.readlines()
+        if len(lines) >= 2:
+            x = f.readlines()[-1]
+            f.close()
+            return x
         f.close()
-        return x
+        return ""
 
     def get_mesures(self, el, path) -> tuple:
         dflt_res = "None"
         if ".log" in el:
             last_line = self.last_line(path + el)
-            metrics = last_line.split(';')
-            loss = metrics[0].split("-")[1].split(":")[1].strip()
-            acc = metrics[1].split(':')[1].strip()
-            val_loss = metrics[2].split(':')[1].strip()
-            val_acc = metrics[3].split(':')[1].strip()
-            return loss, acc, val_loss, val_acc
+            if last_line != "":
+                metrics = last_line.split(';')
+                loss = metrics[0].split("-")[1].split(":")[1].strip()
+                acc = metrics[1].split(':')[1].strip()
+                val_loss = metrics[2].split(':')[1].strip()
+                val_acc = metrics[3].split(':')[1].strip()
+                return loss, acc, val_loss, val_acc
         return dflt_res, dflt_res, dflt_res, dflt_res
 
     def evaluate_models(self, n) -> dict:

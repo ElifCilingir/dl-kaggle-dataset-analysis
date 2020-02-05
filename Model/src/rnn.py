@@ -58,8 +58,8 @@ if __name__ == "__main__":
     x_train = x_train / 255.0
     y_val = y_val / 255.0
 
-    x_train = np.reshape(x_train, (50000, 3072, 1))
-    x_val = np.reshape(x_val, (10000, 3072, 1))
+    x_train = np.reshape(x_train, (50000, 32, 96))
+    x_val = np.reshape(x_val, (10000, 32, 96))
 
     data_shape = x_train.shape[1:]
     m = create_model(data_shape=data_shape)
@@ -70,6 +70,6 @@ if __name__ == "__main__":
     m.fit(x_train,
           y_train,
           validation_data=(x_val, y_val),
-          epochs=3,
+          epochs=20,
           batch_size=64,
           callbacks=[PrintTrueTrainMetricsAtEpochEnd(x_train, y_train)])

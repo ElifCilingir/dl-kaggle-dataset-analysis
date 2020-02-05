@@ -1,12 +1,10 @@
 import os
 import shutil
 import datetime
-import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from enum import Enum
-from src.reporter import Reporter
-from tensorflow.keras.datasets import cifar10
+from more_itertools import take
 
 
 class Helper:
@@ -15,17 +13,7 @@ class Helper:
     It also helps to manage tensorflow processes.
     """
 
-    class Bcolors(Enum):
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-
-    class Logt(Enum):
+    class LogToken(Enum):
         LOSS = "loss"
         SPARSE_ACC = "sparse_categorical_accuracy"
         VAL_LOSS = "val_loss"
@@ -153,15 +141,15 @@ class Helper:
         f = open(path)
         lines = f.readlines()
         if len(lines) >= 2:
-            x = f.readlines()[-1]
+            x = lines[-1]
             f.close()
             return x
         f.close()
         return ""
 
-    def get_mesures(self, el, path) -> tuple:
+    def get_mesures(self, el, path, model_name=None) -> tuple:
         dflt_res = "None"
-        if ".log" in el:
+        if ".log" in el and model_name is None or ".log" in el and model_name in el:
             last_line = self.last_line(path + el)
             if last_line != "":
                 metrics = last_line.split(';')
@@ -172,7 +160,7 @@ class Helper:
                 return loss, acc, val_loss, val_acc
         return dflt_res, dflt_res, dflt_res, dflt_res
 
-    def evaluate_models(self, n) -> dict:
+    def evaluate_models(self, n, model_name=None) -> dict:
         """
         Evaluates the current models
         :return: the n better models
@@ -183,13 +171,14 @@ class Helper:
         try:
             els = os.listdir(path)
             for k, v in enumerate(els):
-                loss, acc, val_loss, val_acc = self.get_mesures(v, path)
+                loss, acc, val_loss, val_acc = self.get_mesures(v, path, model_name)
                 if loss != "None" and acc != "None" and val_loss != "None" and val_acc != "None":
                     res[v.strip(".log")] = self.score(float(str(acc)), float(str(val_acc)))
                     # model_eval[v.strip(".log")] = {"loss": loss, "acc": acc, "val_loss": val_loss, "val_acc": acc}
         except FileNotFoundError:
             print(f"Couldn't evaluate model since there is no logs in `{path}`")
-        return {k: v for k, v in reversed(sorted(res.items(), key=lambda item: item[1])[:n])}
+        sorted_dict = {k: v for k, v in reversed(sorted(res.items(), key=lambda item: item[1]))}
+        return take(n, sorted_dict.items())
 
     @staticmethod
     def debug_dataset_shapes(dataset_name, dataset, terminate=False) -> None:
@@ -216,6 +205,8 @@ class Helper:
         :return: (tuple1 : 2 training tensors of features and labels, tuple2 : 2 validation tensors of
         features and labels)
         """
+        from tensorflow.keras.datasets import cifar10
+
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
         # Normalize the data
         x_train = x_train / 255.0
@@ -236,6 +227,7 @@ class Helper:
         :param model_filename
         :return: a tensorflow keras model instance
         """
+        import tensorflow as tf
         try:
             return tf.keras.models.load_model(model_filename)
         except FileNotFoundError:
@@ -248,6 +240,7 @@ class Helper:
         :param id:
         :return:
         """
+        import tensorflow as tf
         savepath = f"{self.src_path}\\models\\responses\\{name}_{id}.h5"
         return tf.keras.models.load_model(savepath)
 
@@ -295,6 +288,8 @@ class Helper:
         :param process_name: mlp, convnet, resnet...
         :return: None
         """
+        import tensorflow as tf
+        from src.reporter import Reporter
 
         self.save_model(model, process_name)
 
@@ -319,7 +314,6 @@ class Helper:
 
         self.create_file(log_file_path)
         self.create_file(checkpoint_file_path)
-
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_file_path,
             save_weights_only=True,
@@ -343,6 +337,6 @@ class Helper:
                 Reporter(x_train, y_train, batch_size, model_name, log_file_path, hp_log_title=hp_log_title),
                 cp_callback,
                 tensorboard_callback,
-                earlystop_callback
+                # earlystop_callback
             ]
         )

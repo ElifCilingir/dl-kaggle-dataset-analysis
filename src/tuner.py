@@ -277,4 +277,12 @@ if __name__ == "__main__":
     # tuner.resume_mlp_scenario(109)
     cifar10 = Cifar10(dim=3)
     # tuner.convnet_tuner()
-    tuner.launch_scenario("convnet","scenario_convnet_4",cifar10.x_train, cifar10.y_train,cifar10.x_test, cifar10.y_test, 100)
+    tuner.launch_scenario(
+        "convnet",
+        "scenario_convnet_4",
+        cifar10.x_train,
+        cifar10.y_train,
+        cifar10.x_test,
+        cifar10.y_test,
+        100
+    )

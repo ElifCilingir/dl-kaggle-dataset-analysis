@@ -18,7 +18,7 @@ class PrintTrueTrainMetricsAtEpochEnd(Callback):
         self.y_train = y_train
 
     def on_epoch_end(self, epoch, logs=None):
-        loss, acc = self.model.evaluate(self.x_train, self.y_train, batch_size=8192)
+        loss, acc = self.model.evaluate(self.x_train, self.y_train, batch_size=64)
         print(f"The true train loss: {loss}")
         print(f"The true acc loss: {acc}")
 
@@ -31,19 +31,17 @@ def create_model(data_shape):
                return_sequences=True,
                activation=relu,
                input_shape=(data_shape)))
-    #m.add(Dropout(0.2))
+    m.add(Dropout(0.2))
 
-    m.add(LSTM(64,
-               return_sequences=False,
-               activation=relu))
-    #m.add(Dropout(0.2))
+    m.add(LSTM(128, activation=relu))
+    m.add(Dropout(0.2))
 
     m.add(Dense(32, activation=relu))
-    m.add(Dropout(0.2))
+    m.add(Dropout(0.1))
 
     m.add(Dense(10, activation=softmax))
 
-    m.compile(optimizer=Adam(lr=1e-3, decay=1e-5),
+    m.compile(optimizer=Adam(lr=1e-3, decay=1e-5), # reduce learning rate to get best acc
                 loss=sparse_categorical_crossentropy,
                 metrics=[sparse_categorical_accuracy])
 
@@ -72,6 +70,6 @@ if __name__ == "__main__":
     m.fit(x_train,
           y_train,
           validation_data=(x_val, y_val),
-          epochs=10,
-          batch_size=128,
+          epochs=50,
+          batch_size=64,
           callbacks=[PrintTrueTrainMetricsAtEpochEnd(x_train, y_train)])

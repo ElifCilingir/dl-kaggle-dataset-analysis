@@ -198,22 +198,21 @@ class Tuner:
         # Create tuner
         convnet_tuner = Tuner(
             "convnet",
-            dropouts=["NoDropout", "DropoutDescending", "DropoutConstant"],
+            dropouts=["NoDropout", "DropoutDescending"],
             dropout_values=[0.5, 0.4, 0.3],
             activation_functions=["tanh", "relu", "sigmoid"],
-            batch_sizes=[32, 64, 128, 256],
+            batch_sizes=[512, 1024],
             filter_size=64,
-            padding_values=["same", "valid"],
+            padding_values=["same"],
             kernel_sizes=[
                 (3, 3),
-                (4, 4),
-                (5, 5)
+                (4, 4)
             ],
             optimizers=["SGD", "Adam", "Adamax"]
         )
 
         # Create scenario
-        convnet_tuner.create_scenario("scenario_convnet")
+        convnet_tuner.create_scenario("scenario_convnet_4")
 
     @staticmethod
     def mlp_scenario_launcher():
@@ -278,4 +277,4 @@ if __name__ == "__main__":
     # tuner.resume_mlp_scenario(109)
     cifar10 = Cifar10(dim=3)
     # tuner.convnet_tuner()
-    tuner.launch_scenario("convnet","scenario_convnet_3",cifar10.x_train, cifar10.y_train,cifar10.x_test, cifar10.y_test, 100)
+    tuner.launch_scenario("convnet","scenario_convnet_4",cifar10.x_train, cifar10.y_train,cifar10.x_test, cifar10.y_test, 100)

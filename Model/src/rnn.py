@@ -9,6 +9,7 @@ from tensorflow.keras.optimizers import *
 from tensorflow.keras.utils import plot_model
 import numpy as np
 
+# tf.compat.v1.keras.layers.CuDNNLSTM
 
 class PrintTrueTrainMetricsAtEpochEnd(Callback):
     def __init__(self, x_train, y_train):
@@ -26,24 +27,25 @@ def create_model(data_shape):
 
     m = Sequential()
 
-    m.add(LSTM(128, return_sequences=True,
+    m.add(LSTM(128,
+               return_sequences=True,
                activation=relu,
                input_shape=(data_shape)))
-    m.add(Dropout(0.2))
+    #m.add(Dropout(0.2))
 
     m.add(LSTM(64,
                return_sequences=False,
                activation=relu))
-    m.add(Dropout(0.1))
+    #m.add(Dropout(0.2))
 
     m.add(Dense(32, activation=relu))
     m.add(Dropout(0.2))
 
     m.add(Dense(10, activation=softmax))
 
-    m.compile(optimizer=Adam(),
+    m.compile(optimizer=Adam(lr=1e-3, decay=1e-5),
                 loss=sparse_categorical_crossentropy,
-                metrics=[sparse_categorical_crossentropy])
+                metrics=[sparse_categorical_accuracy])
 
     return m
 
@@ -70,6 +72,6 @@ if __name__ == "__main__":
     m.fit(x_train,
           y_train,
           validation_data=(x_val, y_val),
-          epochs=20,
-          batch_size=64,
+          epochs=10,
+          batch_size=128,
           callbacks=[PrintTrueTrainMetricsAtEpochEnd(x_train, y_train)])

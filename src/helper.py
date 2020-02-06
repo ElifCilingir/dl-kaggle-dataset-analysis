@@ -160,6 +160,61 @@ class Helper:
                 return loss, acc, val_loss, val_acc
         return dflt_res, dflt_res, dflt_res, dflt_res
 
+    def read_file(self, path):
+        f = open(path, "r")
+        for line in f:
+            print(line.strip())
+        f.close()
+
+    def read_log(self, model_name):
+        """
+        Read log of the model
+        :param model_name:
+        :return:
+        """
+        self.read_file(self.src_path + "\\models\\logs\\" + model_name + ".log")
+
+
+    def desc(self, model_name):
+        """
+        Return a dict of a model from its name
+        :param model_name: e.g. mlp_1
+        :return: dict with score, acc, loss, val_acc, val_loss
+        """
+        path = self.src_path + "\\models\\logs\\"
+        loss, acc, val_loss, val_acc = self.get_mesures(model_name + ".log", path, model_name.split("_")[0])
+        if loss != "None" and acc != "None" and val_loss != "None" and val_acc != "None":
+            return {model_name: {
+                "score": self.score(float(str(acc)), float(str(val_acc))),
+                "acc": ("%.2f" % (float(acc) * 100)) + "%",
+                "loss": loss,
+                "val_acc": ("%.2f" % (float(val_acc) * 100)) + "%",
+                "val_loss": val_loss,
+                "state": "overfitting" if acc > val_acc else ("underfitting" if acc < val_acc else "perfect")
+            }}
+
+    def details(self, evaluated_models):
+        """
+        Display the details of the evaluated models
+        :param evaluated_models:
+        :return: the details of the evaluated_models
+        """
+        path = self.src_path + "\\models\\logs\\"
+        res = {}
+        for k, v in evaluated_models:
+            loss, acc, val_loss, val_acc = self.get_mesures(k + ".log", path, k.split("_")[0])
+            res[k] = {
+                "score": v,
+                "acc": ("%.2f" % (float(acc) * 100)) + "%",
+                "loss": loss,
+                "val_acc": ("%.2f" % (float(val_acc) * 100)) + "%",
+                "val_loss": val_loss,
+                "state": "overfitting" if acc > val_acc else ("underfitting" if acc < val_acc else "perfect")
+            }
+            # print("key=" + k)
+            # print("value=" + str(v))
+        return res
+
     def evaluate_models(self, n, model_name=None) -> dict:
         """
         Evaluates the current models
@@ -167,7 +222,6 @@ class Helper:
         """
         path = self.src_path + "\\models\\logs\\"
         res = {}
-        # model_eval = {}
         try:
             els = os.listdir(path)
             for k, v in enumerate(els):

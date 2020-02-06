@@ -81,6 +81,8 @@ To perform all checks for the current scenarios it took 3 minutes and 45 seconds
 
 ![title](img/test_perf_06_02_2020.png)
 
+<small><small>Test result generated the February 6, 2020</small></small>
+
 
 #### Authors
 

@@ -1,6 +1,6 @@
 .idea/
 __pycache__/
-*.png
 .ipynb_checkpoints/
 *-checkpoint.ipynb
 requirements.txt
+notebooks/*.png

@@ -333,6 +333,7 @@ class Helper:
         """
         Fit a model and adds a checkpoint to avoid losing data in case of failure.
         Checkpoint is also useful in case of overfitting
+        :param hp_log_title: indicate the hyperparameters to add in fit's log file
         :param model: tensorflow keras model
         :param x_train: features
         :param y_train: labels

@@ -31,44 +31,27 @@ class Residual:
         return x
 
 
-def create_model():
+def create_model(n_resblocks=10, h_filters=64, l_filters=32, dropout=0.5, n_neurons=256, k_size=3):
     inputs = Input(shape=(32, 32, 3))
-    x = Conv2D(32, 3, activation='relu')(inputs)
-    x = Conv2D(64, 3, activation='relu')(x)
-    x = MaxPooling2D(3)(x)
+    x = Conv2D(l_filters, k_size, activation='relu')(inputs)
+    x = Conv2D(h_filters, k_size, activation='relu')(x)
+    x = MaxPooling2D(k_size)(x)
 
-    n_resblocks = 10
     for i in range(n_resblocks):
-        x = Residual.block(x, 64, 3)
+        x = Residual.block(x, h_filters, k_size)
 
-    x = Conv2D(64, 3, activation='relu')(x)
+    x = Conv2D(h_filters, k_size, activation='relu')(x)
     x = GlobalAveragePooling2D()(x)
-    x = Dense(256, activation='relu')(x)
-    x = Dropout(0.5)(x)
+    x = Dense(n_neurons, activation='relu')(x)
+    x = Dropout(dropout)(x)
     outputs = Dense(10, activation='softmax')(x)
 
-    return Model(inputs, outputs)
+    model = Model(inputs, outputs)
 
-
-if __name__ == "__main__":
-    helper = Helper()
-    cifar10 = Cifar10(dim=3)
-
-    model = create_model()
-
-    # Compilation du modèle
-    model.compile(optimizer="adam", loss='sparse_categorical_crossentropy', metrics=['sparse_categorical_accuracy'])
-    model.summary()
-
-    helper.fit(
-        model,
-        cifar10.x_train,
-        cifar10.y_train,
-        1024,
-        100,
-        validation_data=(cifar10.x_test, cifar10.y_test),
-        process_name="resnet"
+    model.compile(
+        optimizer="adam",
+        loss='sparse_categorical_crossentropy',
+        metrics=['sparse_categorical_accuracy']
     )
-    # plot_model(m)
 
-    # m.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=100, batch_size=1024)
+    return model

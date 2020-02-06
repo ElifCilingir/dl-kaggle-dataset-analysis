@@ -1,34 +1,19 @@
 import os
-import re
-import datetime
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import shutil
-import glob
-import multiprocessing
+import datetime
+import matplotlib.pyplot as plt
 
 from enum import Enum
-from pathlib import Path
-from src.reporter import Reporter
-from tensorflow.keras.datasets import cifar10
+from more_itertools import take
 
 
 class Helper:
     """
-    Helper class is here to help the developer debugging machine learning resources and variables and manage processes.
+    Helper class is here to help the developer debugging machine learning resources and variables.
+    It also helps to manage tensorflow processes.
     """
 
-    class Bcolors(Enum):
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-
-    class Logt(Enum):
+    class LogToken(Enum):
         LOSS = "loss"
         SPARSE_ACC = "sparse_categorical_accuracy"
         VAL_LOSS = "val_loss"
@@ -154,40 +139,100 @@ class Helper:
     @staticmethod
     def last_line(path) -> str:
         f = open(path)
-        x = f.readlines()[-1]
+        lines = f.readlines()
+        if len(lines) >= 2:
+            x = lines[-1]
+            f.close()
+            return x
         f.close()
-        return x
+        return ""
 
-    def get_mesures(self, el, path) -> tuple:
+    def get_mesures(self, el, path, model_name=None) -> tuple:
         dflt_res = "None"
-        if ".log" in el:
+        if ".log" in el and model_name is None or ".log" in el and model_name in el:
             last_line = self.last_line(path + el)
-            metrics = last_line.split(';')
-            loss = metrics[0].split("-")[1].split(":")[1].strip()
-            acc = metrics[1].split(':')[1].strip()
-            val_loss = metrics[2].split(':')[1].strip()
-            val_acc = metrics[3].split(':')[1].strip()
-            return loss, acc, val_loss, val_acc
+            if last_line != "":
+                metrics = last_line.split(';')
+                loss = metrics[0].split("-")[1].split(":")[1].strip()
+                acc = metrics[1].split(':')[1].strip()
+                val_loss = metrics[2].split(':')[1].strip()
+                val_acc = metrics[3].split(':')[1].strip()
+                return loss, acc, val_loss, val_acc
         return dflt_res, dflt_res, dflt_res, dflt_res
 
-    def evaluate_models(self, n) -> dict:
+    def read_file(self, path):
+        f = open(path, "r")
+        for line in f:
+            print(line.strip())
+        f.close()
+
+    def read_log(self, model_name):
+        """
+        Read log of the model
+        :param model_name:
+        :return:
+        """
+        self.read_file(self.src_path + "\\models\\logs\\" + model_name + ".log")
+
+
+    def desc(self, model_name):
+        """
+        Return a dict of a model from its name
+        :param model_name: e.g. mlp_1
+        :return: dict with score, acc, loss, val_acc, val_loss
+        """
+        path = self.src_path + "\\models\\logs\\"
+        loss, acc, val_loss, val_acc = self.get_mesures(model_name + ".log", path, model_name.split("_")[0])
+        if loss != "None" and acc != "None" and val_loss != "None" and val_acc != "None":
+            return {model_name: {
+                "score": self.score(float(str(acc)), float(str(val_acc))),
+                "acc": ("%.2f" % (float(acc) * 100)) + "%",
+                "loss": loss,
+                "val_acc": ("%.2f" % (float(val_acc) * 100)) + "%",
+                "val_loss": val_loss,
+                "state": "overfitting" if acc > val_acc else ("underfitting" if acc < val_acc else "perfect")
+            }}
+
+    def details(self, evaluated_models):
+        """
+        Display the details of the evaluated models
+        :param evaluated_models:
+        :return: the details of the evaluated_models
+        """
+        path = self.src_path + "\\models\\logs\\"
+        res = {}
+        for k, v in evaluated_models:
+            loss, acc, val_loss, val_acc = self.get_mesures(k + ".log", path, k.split("_")[0])
+            res[k] = {
+                "score": v,
+                "acc": ("%.2f" % (float(acc) * 100)) + "%",
+                "loss": loss,
+                "val_acc": ("%.2f" % (float(val_acc) * 100)) + "%",
+                "val_loss": val_loss,
+                "state": "overfitting" if acc > val_acc else ("underfitting" if acc < val_acc else "perfect")
+            }
+            # print("key=" + k)
+            # print("value=" + str(v))
+        return res
+
+    def evaluate_models(self, n, model_name=None) -> dict:
         """
         Evaluates the current models
         :return: the n better models
         """
         path = self.src_path + "\\models\\logs\\"
         res = {}
-        # model_eval = {}
         try:
             els = os.listdir(path)
             for k, v in enumerate(els):
-                loss, acc, val_loss, val_acc = self.get_mesures(v, path)
+                loss, acc, val_loss, val_acc = self.get_mesures(v, path, model_name)
                 if loss != "None" and acc != "None" and val_loss != "None" and val_acc != "None":
                     res[v.strip(".log")] = self.score(float(str(acc)), float(str(val_acc)))
                     # model_eval[v.strip(".log")] = {"loss": loss, "acc": acc, "val_loss": val_loss, "val_acc": acc}
         except FileNotFoundError:
             print(f"Couldn't evaluate model since there is no logs in `{path}`")
-        return {k: v for k, v in reversed(sorted(res.items(), key=lambda item: item[1])[:n])}
+        sorted_dict = {k: v for k, v in reversed(sorted(res.items(), key=lambda item: item[1]))}
+        return take(n, sorted_dict.items())
 
     @staticmethod
     def debug_dataset_shapes(dataset_name, dataset, terminate=False) -> None:
@@ -214,6 +259,8 @@ class Helper:
         :return: (tuple1 : 2 training tensors of features and labels, tuple2 : 2 validation tensors of
         features and labels)
         """
+        from tensorflow.keras.datasets import cifar10
+
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
         # Normalize the data
         x_train = x_train / 255.0
@@ -234,12 +281,20 @@ class Helper:
         :param model_filename
         :return: a tensorflow keras model instance
         """
+        import tensorflow as tf
         try:
             return tf.keras.models.load_model(model_filename)
         except FileNotFoundError:
             print("Error: Couldn't load the model. Check if the file exists.")
 
-    def load_model(self, name, id):
+    def get_model(self, name, id) -> object:
+        """
+        Returns a tensorflow keras model from a generated
+        :param name:
+        :param id:
+        :return:
+        """
+        import tensorflow as tf
         savepath = f"{self.src_path}\\models\\responses\\{name}_{id}.h5"
         return tf.keras.models.load_model(savepath)
 
@@ -278,6 +333,7 @@ class Helper:
         """
         Fit a model and adds a checkpoint to avoid losing data in case of failure.
         Checkpoint is also useful in case of overfitting
+        :param hp_log_title: indicate the hyperparameters to add in fit's log file
         :param model: tensorflow keras model
         :param x_train: features
         :param y_train: labels
@@ -287,6 +343,8 @@ class Helper:
         :param process_name: mlp, convnet, resnet...
         :return: None
         """
+        import tensorflow as tf
+        from src.reporter import Reporter
 
         self.save_model(model, process_name)
 
@@ -311,13 +369,18 @@ class Helper:
 
         self.create_file(log_file_path)
         self.create_file(checkpoint_file_path)
-
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_file_path,
             save_weights_only=True,
             verbose=1
         )
+
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_log_current_dir, histogram_freq=1)
+
+        earlystop_callback = tf.keras.callbacks.EarlyStopping(
+            monitor="val_sparse_categorical_accuracy", min_delta=0.0001,
+            patience=1
+        )
 
         model.fit(
             x_train,
@@ -328,6 +391,7 @@ class Helper:
             callbacks=[
                 Reporter(x_train, y_train, batch_size, model_name, log_file_path, hp_log_title=hp_log_title),
                 cp_callback,
-                tensorboard_callback
+                tensorboard_callback,
+                # earlystop_callback
             ]
         )

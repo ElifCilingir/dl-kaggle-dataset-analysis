@@ -11,7 +11,10 @@ class Reporter(Callback):
         self.epoch_iter = 0
         self.model_name = model_name
         self.log_file_path = log_file_path
-        self.hp_log_title = hp_log_title.replace("\n", "")
+        if hp_log_title:
+            self.hp_log_title = hp_log_title.replace("\n", "")
+        else:
+            self.hp_log_title = ""
 
     def on_train_begin(self, logs=None):
         f = open(self.log_file_path, "a")

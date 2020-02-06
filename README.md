@@ -67,6 +67,20 @@ python -m tools.purge_model [model_name]
 `[model_name]` in this case can be `mlp_100` for example.
 So if we `launch python tools\purge_model.py mlp_100` it will delete all files related to the `mlp_100` model.
 
+### Testing
+
+To test if the tuner works before training, you can launch the `test_scenarios.py` file with the `unittest` package.
+
+```
+python -m unittest tests\test_scenarios.py
+```
+
+##### Performance
+
+To perform all checks for the current scenarios it took 3 minutes and 45 seconds to build and test the models configurations.
+
+![title](img/test_perf_06_02_2020.png)
+
 
 #### Authors
 

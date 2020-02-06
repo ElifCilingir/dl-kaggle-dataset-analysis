@@ -163,17 +163,21 @@ class Tuner:
             self,
             process_name,
             scenario_name,
-            x_train,
-            y_train,
-            x_test,
-            y_test,
-            epochs,
-            resume_at=None
+            x_train=None,
+            y_train=None,
+            x_test=None,
+            y_test=None,
+            epochs=None,
+            resume_at=None,
+            test=False
     ):
         scenario_file_path = self.src_path + "\\scenarios\\" + process_name + "\\" + scenario_name + ".csv"
         scenario_file = open(scenario_file_path, "r")
         process = importlib.import_module("src.models.processes." + process_name)
         model = None
+
+        if test:
+            config_list = []
 
         i = 0 if resume_at is not None else None
         for line in scenario_file:
@@ -229,19 +233,24 @@ class Tuner:
             else:
                 raise ValueError("Model tuning for this process is not possible")
 
-            model.summary()
-            Helper().fit(
-                model=model,
-                x_train=x_train,
-                y_train=y_train,
-                batch_size=batch_size,
-                epochs=epochs,
-                validation_data=(x_test, y_test),
-                process_name=process_name,
-                hp_log_title=line
-            )
+            if test:
+                config_list.append(model.get_config())
+            else:
+                model.summary()
+                Helper().fit(
+                    model=model,
+                    x_train=x_train,
+                    y_train=y_train,
+                    batch_size=batch_size,
+                    epochs=epochs,
+                    validation_data=(x_test, y_test),
+                    process_name=process_name,
+                    hp_log_title=line
+                )
 
         scenario_file.close()
+        if test:
+            return config_list
 
     @staticmethod
     def mlp_tuner():

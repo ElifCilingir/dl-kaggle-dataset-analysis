@@ -29,6 +29,13 @@ cd notebooks
 jupyter notebook
 ```
 
+Feel free to read the notebooks, it is advised to read it in the current order :
+
+1) linear.ipynb
+2) mlp.ipynb
+3) convnet.ipynb
+4) resnet.ipynb
+4) ~~rnn.ipynb~~ (TODO)
 
 ### Tools
 

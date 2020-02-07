@@ -429,4 +429,14 @@ if __name__ == "__main__":
         n_neurons_values=[64, 128],
         dropout_values=[0.2, 0.1, None]
     )
-    tuner.create_scenario("rnn_scenario")
+    # tuner.create_scenario("rnn_scenario")
+    tuner.launch_scenario(
+        "rnn",
+        "rnn_scenario",
+        cifar10.x_train,
+        cifar10.y_train,
+        cifar10.x_test,
+        cifar10.y_test,
+        100
+    )
+

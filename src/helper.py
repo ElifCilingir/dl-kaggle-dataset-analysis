@@ -184,7 +184,7 @@ class Helper:
         for scenario in scenarios:
             list.append(tuner.launch_scenario(
                 process_name,
-                scenario_name=scenario.replace(".csv",""),
+                scenario_name=scenario.replace(".csv", ""),
                 test=True
             ))
 
@@ -198,7 +198,6 @@ class Helper:
         # import pprint
         # pprint.pprint(list)
         # exit()
-
 
     def desc(self, model_name):
         """
@@ -294,6 +293,9 @@ class Helper:
         if dim == 1:
             x_train = x_train.reshape((50000, 32 * 32 * 3))
             x_test = x_test.reshape((10000, 32 * 32 * 3))
+        elif dim == 2:
+            x_train = x_train.reshape((50000, 32, 32 * 3))
+            x_test = x_test.reshape((10000, 32, 32 * 3))
         elif dim == 3:
             x_train = x_train.reshape((50000, 32, 32, 3))
             x_test = x_test.reshape((10000, 32, 32, 3))

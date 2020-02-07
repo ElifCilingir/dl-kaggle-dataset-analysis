@@ -421,12 +421,15 @@ if __name__ == "__main__":
     #     100
     # )
 
-    tuner = Tuner(
-        process_name="rnn",
-        n_layers=[1, 2, 3],
-        optimizers=["SGD", "Adam", "Adamax"],
-        batch_sizes=[512, 1024, 2048],
-        n_neurons_values=[64, 128],
-        dropout_values=[0.2, 0.1, None]
+    tuner = Tuner()
+    # tuner.create_scenario("rnn_scenario")
+    cifar10 = Cifar10(dim=2)
+    tuner.launch_scenario(
+        "rnn",
+        "rnn_scenario",
+        cifar10.x_train,
+        cifar10.y_train,
+        cifar10.x_test,
+        cifar10.y_test,
+        100
     )
-    tuner.create_scenario("rnn_scenario")

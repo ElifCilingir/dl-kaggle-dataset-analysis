@@ -2,13 +2,16 @@
 RNN process to generate models for the CIFAR-10 dataset.
 '''
 
+import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import (
-    LSTM,
-    Dense
-)
+from tensorflow.keras.layers import Dense
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras.metrics import sparse_categorical_accuracy
+
+if tf.test.is_built_with_cuda():
+    from tensorflow_core.python.keras.layers import CuDNNLSTM as LSTM
+else:
+    from tensorflow.keras.layers import LSTM
 
 
 def create_model(n_layers, optimizer, n_neurons, dropout):
@@ -16,14 +19,20 @@ def create_model(n_layers, optimizer, n_neurons, dropout):
     for i in range(n_layers):
         if i == 0:
             if dropout is not None:
-                model.add(LSTM(n_neurons, dropout=dropout, return_sequences=True, input_dim=(32 * 32 * 3)))
+                model.add(LSTM(n_neurons, dropout=dropout, return_sequences=True, input_shape=(32, 96)))
             else:
-                model.add(LSTM(n_neurons, return_sequences=True, input_dim=(32 * 32 * 3)))
+                model.add(LSTM(n_neurons, return_sequences=True, input_shape=(32, 96)))
         else:
-            if dropout is not None:
-                model.add(LSTM(n_neurons, dropout=dropout, return_sequences=True))
+            if i == n_layers - 1:
+                if dropout is not None:
+                    model.add(LSTM(n_neurons, dropout=dropout))
+                else:
+                    model.add(LSTM(n_neurons))
             else:
-                model.add(LSTM(n_neurons, return_sequences=True))
+                if dropout is not None:
+                    model.add(LSTM(n_neurons, dropout=dropout, return_sequences=True))
+                else:
+                    model.add(LSTM(n_neurons, return_sequences=True))
     model.add(Dense(10, activation="sigmoid"))
     model.compile(
         optimizer=optimizer,
@@ -32,3 +41,24 @@ def create_model(n_layers, optimizer, n_neurons, dropout):
     )
 
     return model
+
+
+if __name__ == "__main__":
+    model = create_model(
+        2, "adam", 64, None
+    )
+    from src.helper import Helper
+    from src.cifar10 import Cifar10
+
+    model.summary()
+    cifar10 = Cifar10(dim=2)
+
+    Helper().fit(
+        model,
+        cifar10.x_train,
+        cifar10.y_train,
+        1024,
+        2,
+        (cifar10.x_test, cifar10.y_test),
+        "rnn"
+    )

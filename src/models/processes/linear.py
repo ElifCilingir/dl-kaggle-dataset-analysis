@@ -121,8 +121,7 @@ def linear_functions_tests():
 def create_model():
     model = Sequential()
 
-    model.add(Dense(128, input_dim=3072))  # 32 * 32 * 3
-
+    model.add(Dense(10, activation="softmax", input_dim=3072))
     model.compile(
         loss=sparse_categorical_crossentropy,
         metrics=[sparse_categorical_accuracy]

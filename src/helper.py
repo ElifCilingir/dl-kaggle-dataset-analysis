@@ -174,6 +174,31 @@ class Helper:
         """
         self.read_file(self.src_path + "\\models\\logs\\" + model_name + ".log")
 
+    def scenarios_works(self, process_name) -> bool:
+        from src.tuner import Tuner
+        path = self.src_path + "\\scenarios\\" + process_name + "\\"
+        scenarios = os.listdir(path)
+        tuner = Tuner()
+        list = []
+
+        for scenario in scenarios:
+            list.append(tuner.launch_scenario(
+                process_name,
+                scenario_name=scenario.replace(".csv",""),
+                test=True
+            ))
+
+        for el in list:
+            for subel in el:
+                print(subel['name'])
+            if el == "" or el is None:
+                return False
+
+        return True
+        # import pprint
+        # pprint.pprint(list)
+        # exit()
+
 
     def desc(self, model_name):
         """

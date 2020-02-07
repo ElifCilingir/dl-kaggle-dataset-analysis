@@ -26,7 +26,8 @@ class Tuner:
             h_filters_values=None,
             l_filters_values=None,
             n_neurons_values=None,
-            n_resblock_values=None
+            n_resblock_values=None,
+            n_layers=None
     ):
         if process_name is not None:
             self.process_name = process_name
@@ -53,17 +54,36 @@ class Tuner:
                 self.kernel_sizes = kernel_sizes
                 self.batch_sizes = batch_sizes
                 self.n_resblock_values = n_resblock_values
+            elif process_name.lower() == "rnn":
+                self.optimizers = optimizers
+                self.batch_sizes = batch_sizes
+                self.n_neurons_values = n_neurons_values
+                self.dropout_values = dropout_values
+                self.n_layers = n_layers
         self.src_path = os.path.dirname(os.path.realpath(__file__))
 
     @staticmethod
-    def resnet_write(scenario_file,
-                     n_resblock_v,
-                     dropout_v,
-                     h_filters_v,
-                     l_fiters_v,
-                     n_neurons_v,
-                     kernel_size,
-                     batch_size):
+    def rnn_write(
+            scenario_file,
+            n_layers,
+            optimizer,
+            batch_size,
+            n_neurons_v,
+            dropout_v
+    ):
+        scenario_file.write(f"{n_layers},{n_neurons_v},{dropout_v},{optimizer},{batch_size}\n")
+
+    @staticmethod
+    def resnet_write(
+            scenario_file,
+            n_resblock_v,
+            dropout_v,
+            h_filters_v,
+            l_fiters_v,
+            n_neurons_v,
+            kernel_size,
+            batch_size
+    ):
         scenario_file.write(
             f"{n_resblock_v},{dropout_v},{h_filters_v},{l_fiters_v},{n_neurons_v},{kernel_size},{batch_size}\n")
 
@@ -129,6 +149,20 @@ class Tuner:
                                                 kernel_size=kernel_size,
                                                 batch_size=batch_size
                                             )
+            elif self.process_name == "rnn":
+                for n_layer in self.n_layers:
+                    for optimizer in self.optimizers:
+                        for batch_size in self.batch_sizes:
+                            for n_neuron_v in self.n_neurons_values:
+                                for dropout_v in self.dropout_values:
+                                    self.rnn_write(
+                                        scenario_file,
+                                        n_layer,
+                                        optimizer,
+                                        batch_size,
+                                        n_neuron_v,
+                                        dropout_v
+                                    )
             else:
                 for dropout in self.dropouts:
                     for optimizer in self.optimizers:
@@ -163,17 +197,21 @@ class Tuner:
             self,
             process_name,
             scenario_name,
-            x_train,
-            y_train,
-            x_test,
-            y_test,
-            epochs,
-            resume_at=None
+            x_train=None,
+            y_train=None,
+            x_test=None,
+            y_test=None,
+            epochs=None,
+            resume_at=None,
+            test=False
     ):
         scenario_file_path = self.src_path + "\\scenarios\\" + process_name + "\\" + scenario_name + ".csv"
         scenario_file = open(scenario_file_path, "r")
         process = importlib.import_module("src.models.processes." + process_name)
         model = None
+
+        if test:
+            config_list = []
 
         i = 0 if resume_at is not None else None
         for line in scenario_file:
@@ -199,6 +237,18 @@ class Tuner:
                     dropout=dropout,
                     n_neurons=n_neurons,
                     k_size=k_size
+                )
+            elif process_name == "rnn":
+                n_layers = int(hp[0])
+                n_neurons = int(hp[1])
+                dropout = float(hp[2]) if hp[2] != "None" else None
+                optimizer = hp[3]
+                batch_size = int(hp[4])
+                model = process.create_model(
+                    n_layers,
+                    optimizer,
+                    n_neurons,
+                    dropout
                 )
             elif process_name in ["convnet", "mlp"]:
                 (dropout, dropout_values) = self.filter_dropout(hp[0])
@@ -229,19 +279,24 @@ class Tuner:
             else:
                 raise ValueError("Model tuning for this process is not possible")
 
-            model.summary()
-            Helper().fit(
-                model=model,
-                x_train=x_train,
-                y_train=y_train,
-                batch_size=batch_size,
-                epochs=epochs,
-                validation_data=(x_test, y_test),
-                process_name=process_name,
-                hp_log_title=line
-            )
+            if test:
+                config_list.append(model.get_config())
+            else:
+                model.summary()
+                Helper().fit(
+                    model=model,
+                    x_train=x_train,
+                    y_train=y_train,
+                    batch_size=batch_size,
+                    epochs=epochs,
+                    validation_data=(x_test, y_test),
+                    process_name=process_name,
+                    hp_log_title=line
+                )
 
         scenario_file.close()
+        if test:
+            return config_list
 
     @staticmethod
     def mlp_tuner():
@@ -352,25 +407,26 @@ if __name__ == "__main__":
     #     100
     # )
 
-    tuner = Tuner(
-        "resnet",
-        n_resblock_values=[8, 10],
-        dropout_values=[0.5, 0.4],
-        h_filters_values=[64, 32],
-        l_filters_values=[32, 16],
-        n_neurons_values=[256, 128],
-        kernel_sizes=[3, 4],
-        batch_sizes=[512, 1024]
-    )
+    # tuner = Tuner()
 
-    cifar10 = Cifar10(dim=3)
+    # cifar10 = Cifar10(dim=3)
     # tuner.create_scenario("resnet_scenario")
-    tuner.launch_scenario(
-        "resnet",
-        "resnet_scenario",
-        cifar10.x_train,
-        cifar10.y_train,
-        cifar10.x_test,
-        cifar10.y_test,
-        100
-    ) # to launch on powerful PC
+    # tuner.launch_scenario(
+    #     "resnet",
+    #     "resnet_scenario",
+    #     cifar10.x_train,
+    #     cifar10.y_train,
+    #     cifar10.x_test,
+    #     cifar10.y_test,
+    #     100
+    # )
+
+    tuner = Tuner(
+        process_name="rnn",
+        n_layers=[1, 2, 3],
+        optimizers=["SGD", "Adam", "Adamax"],
+        batch_sizes=[512, 1024, 2048],
+        n_neurons_values=[64, 128],
+        dropout_values=[0.2, 0.1, None]
+    )
+    tuner.create_scenario("rnn_scenario")

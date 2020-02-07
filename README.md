@@ -29,6 +29,13 @@ cd notebooks
 jupyter notebook
 ```
 
+Feel free to read the notebooks, it is advised to read it in the current order :
+
+1) linear.ipynb
+2) mlp.ipynb
+3) convnet.ipynb
+4) resnet.ipynb
+4) ~~rnn.ipynb~~ (TODO)
 
 ### Tools
 
@@ -66,6 +73,23 @@ python -m tools.purge_model [model_name]
 
 `[model_name]` in this case can be `mlp_100` for example.
 So if we `launch python tools\purge_model.py mlp_100` it will delete all files related to the `mlp_100` model.
+
+### Testing
+
+To test if the tuner works before training, you can launch the `test_scenarios.py` file with the `unittest` package.
+
+```
+python -m unittest tests\test_scenarios.py
+```
+
+##### Performance
+
+To perform all checks for the current scenarios it took 3 minutes and 45 seconds to build and test the models configurations.
+
+![title](https://i.imgur.com/vI95AgZ.png)
+
+
+<small><small>Test result generated the February 6, 2020</small></small>
 
 
 #### Authors

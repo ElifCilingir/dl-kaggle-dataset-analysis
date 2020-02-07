@@ -4,14 +4,9 @@ RNN process to generate models for the CIFAR-10 dataset.
 
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras.metrics import sparse_categorical_accuracy
-
-if tf.test.is_built_with_cuda():
-    from tensorflow_core.python.keras.layers import CuDNNLSTM as LSTM
-else:
-    from tensorflow.keras.layers import LSTM
 
 
 def create_model(n_layers, optimizer, n_neurons, dropout):

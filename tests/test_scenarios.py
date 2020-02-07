@@ -14,6 +14,9 @@ class TestScenarios(unittest.TestCase):
     def test_resnet(self):
         self.assertTrue(Helper().scenarios_works("resnet"))
 
+    def test_rnn(self):
+        self.assertTrue(Helper().scenarios_works("rnn"))
+
 
 if __name__ == '__main__':
     unittest.main()

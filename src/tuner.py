@@ -361,16 +361,7 @@ if __name__ == "__main__":
     #     100
     # )
 
-    tuner = Tuner(
-        "resnet",
-        n_resblock_values=[8, 10],
-        dropout_values=[0.5, 0.4],
-        h_filters_values=[64, 32],
-        l_filters_values=[32, 16],
-        n_neurons_values=[256, 128],
-        kernel_sizes=[3, 4],
-        batch_sizes=[512, 1024]
-    )
+    tuner = Tuner()
 
     cifar10 = Cifar10(dim=3)
     # tuner.create_scenario("resnet_scenario")

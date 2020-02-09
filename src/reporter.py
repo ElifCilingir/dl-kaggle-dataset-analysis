@@ -22,18 +22,19 @@ class Reporter(Callback):
         f.close()
 
     def on_epoch_end(self, epoch, logs=None):
-        self.epoch_iter += 1
-        # (loss, acc) = self.model.evaluate(self.x_train, self.y_train, batch_size=self.batch_size)
-        f = open(self.log_file_path, "a")
-        f.write("ep {} - "
-                "l: {} ; "
-                "acc : {} ; "
-                "vl : {} ; "
-                "vacc : {}\n"
-                .format(self.epoch_iter, logs['loss'], logs['sparse_categorical_accuracy'], logs['val_loss'],
-                        logs['val_sparse_categorical_accuracy'])
-                )
-        f.close()
+        if logs:
+            self.epoch_iter += 1
+            # (loss, acc) = self.model.evaluate(self.x_train, self.y_train, batch_size=self.batch_size)
+            f = open(self.log_file_path, "a")
+            f.write("ep {} - "
+                    "l: {} ; "
+                    "acc : {} ; "
+                    "vl : {} ; "
+                    "vacc : {}\n"
+                    .format(self.epoch_iter, logs['loss'], logs['sparse_categorical_accuracy'], logs['val_loss'],
+                            logs['val_sparse_categorical_accuracy'])
+                    )
+            f.close()
 
     def on_train_end(self, logs=None):
         self.epoch_iter = 0

@@ -14,6 +14,10 @@ class Helper:
     """
 
     class LogToken(Enum):
+        """
+        Token to take into account in the log files
+        TODO modify it to take shorter elements
+        """
         LOSS = "loss"
         SPARSE_ACC = "sparse_categorical_accuracy"
         VAL_LOSS = "val_loss"
@@ -132,13 +136,24 @@ class Helper:
 
     @staticmethod
     def score(acc, val_acc) -> float:
+        """
+        Return the score from model's accuracy and validation accuracy
+        :param acc:
+        :param val_acc:
+        :return:
+        """
         p = min(acc, val_acc)
         g = max(acc, val_acc)
         return float(10 * p * (1 + (p / g)))
 
     @staticmethod
-    def last_line(path) -> str:
-        f = open(path)
+    def last_line(filepath) -> str:
+        """
+        Get the last line of a file from its absolute or relative path
+        :param filepath:
+        :return:
+        """
+        f = open(filepath)
         lines = f.readlines()
         if len(lines) >= 2:
             x = lines[-1]
@@ -148,6 +163,13 @@ class Helper:
         return ""
 
     def get_mesures(self, el, path, model_name=None) -> tuple:
+        """
+        Get metrics and losses from a model
+        :param el:
+        :param path:
+        :param model_name:
+        :return:
+        """
         dflt_res = "None"
         if ".log" in el and model_name is None or ".log" in el and model_name in el:
             last_line = self.last_line(path + el)
@@ -161,6 +183,11 @@ class Helper:
         return dflt_res, dflt_res, dflt_res, dflt_res
 
     def read_file(self, path):
+        """
+        Show every line of a file
+        :param path:
+        :return:
+        """
         f = open(path, "r")
         for line in f:
             print(line.strip())
@@ -175,6 +202,11 @@ class Helper:
         self.read_file(self.src_path + "\\models\\logs\\" + model_name + ".log")
 
     def scenarios_works(self, process_name) -> bool:
+        """
+        Returns True if every models if a process name scenario works, False otherwise
+        :param process_name:
+        :return: bool
+        """
         from src.tuner import Tuner
         path = self.src_path + "\\scenarios\\" + process_name + "\\"
         scenarios = os.listdir(path)
@@ -195,9 +227,6 @@ class Helper:
                 return False
 
         return True
-        # import pprint
-        # pprint.pprint(list)
-        # exit()
 
     def desc(self, model_name):
         """
@@ -336,6 +365,13 @@ class Helper:
         f.close()
 
     def purge(self, model_name=None, ckpt=False):
+        """
+        Purge models and/ord checkpoints
+        TODO add automatic checkpoint purge
+        :param model_name:
+        :param ckpt:
+        :return:
+        """
         if ckpt:
             try:
                 shutil.rmtree(f"{self.src_path}\\models\\checkpoints\\")
@@ -356,10 +392,11 @@ class Helper:
                 pass
 
     def fit(self, model, x_train, y_train, batch_size, epochs, validation_data, process_name,
-            hp_log_title=None) -> None:
+            hp_log_title=None, std_logs=False, earlystop=False) -> None:
         """
         Fit a model and adds a checkpoint to avoid losing data in case of failure.
         Checkpoint is also useful in case of overfitting
+        TODO Shorten this method for the next iteration of the project
         :param hp_log_title: indicate the hyperparameters to add in fit's log file
         :param model: tensorflow keras model
         :param x_train: features
@@ -409,16 +446,19 @@ class Helper:
             patience=1
         )
 
+        callbacks = []
+        if std_logs:
+            callbacks.append(Reporter(x_train, y_train, batch_size, model_name, log_file_path, hp_log_title=hp_log_title))
+        callbacks.append(cp_callback)
+        callbacks.append(tensorboard_callback)
+        if earlystop:
+            callbacks.append(earlystop_callback)
+
         model.fit(
             x_train,
             y_train,
             batch_size=batch_size,
             epochs=epochs,
             validation_data=(x_test, y_test),
-            callbacks=[
-                Reporter(x_train, y_train, batch_size, model_name, log_file_path, hp_log_title=hp_log_title),
-                cp_callback,
-                tensorboard_callback,
-                # earlystop_callback
-            ]
+            callbacks=callbacks
         )

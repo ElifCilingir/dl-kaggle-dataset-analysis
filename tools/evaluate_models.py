@@ -1,3 +1,6 @@
+"""
+Evaluate n models from a process_name
+"""
 import pprint
 import sys
 
@@ -9,7 +12,7 @@ if __name__ == "__main__":
     arg_len_is_valid = arg_len != 3 or arg_len != 2
 
     if not arg_len_is_valid:
-        print("Usage:\n    python -m tools\evaluate_models.py [nb_of_models] [model_name]\n    or\n    python -m tools\evaluate_models.py [nb_of_models]")
+        print("Usage:\n    python -m tools.evaluate_models [nb_of_models] [process_name]\n    or\n    python -m tools.evaluate_models [process_name]")
         exit(1)
 
     if arg_len == 2:
@@ -17,5 +20,5 @@ if __name__ == "__main__":
         pprint.pprint(helper.evaluate_models(nb_of_models))
     elif arg_len == 3:
         nb_of_models = int(sys.argv[1])
-        model_name = sys.argv[2]
-        pprint.pprint(helper.evaluate_models(nb_of_models, model_name))
+        process_name = sys.argv[2]
+        pprint.pprint(helper.evaluate_models(nb_of_models, process_name))

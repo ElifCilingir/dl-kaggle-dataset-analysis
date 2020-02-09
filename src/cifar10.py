@@ -1,6 +1,9 @@
 from src.helper import Helper
 
 class Cifar10:
+    """
+    Ease CIFAR-10 creation with indicated shape
+    """
     def __init__(self, dim=1):
         self.helper = Helper()
         if dim >= 1 and dim <= 3:

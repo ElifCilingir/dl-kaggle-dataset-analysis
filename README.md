@@ -35,7 +35,7 @@ Feel free to read the notebooks, it is advised to read it in the current order :
 2) mlp.ipynb
 3) convnet.ipynb
 4) resnet.ipynb
-4) ~~rnn.ipynb~~ (TODO)
+4) rnn.ipynb
 
 ### Tools
 
@@ -80,6 +80,14 @@ To test if the tuner works before training, you can launch the `test_scenarios.p
 
 ```
 python -m unittest tests\test_scenarios.py
+```
+
+### Documentation
+
+To access the documentation of the project in your browser write :
+
+```
+pydoc -b
 ```
 
 ##### Performance

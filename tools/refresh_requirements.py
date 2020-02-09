@@ -1,3 +1,7 @@
+"""
+Delete and create a new requirements.txt files from the installed packages in the current environment
+"""
+
 import os
 
 if __name__ == "__main__":

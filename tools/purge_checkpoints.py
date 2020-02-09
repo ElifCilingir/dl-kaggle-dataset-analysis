@@ -1,4 +1,7 @@
-import sys
+"""
+Delete the src/models/checkpoints folder
+"""
+
 from src.helper import Helper
 
 if __name__ == "__main__":

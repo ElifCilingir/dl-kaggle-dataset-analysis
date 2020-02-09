@@ -53,7 +53,8 @@ if __name__ == "__main__":
         cifar10.x_train,
         cifar10.y_train,
         1024,
-        3,
+        100,
         (cifar10.x_test, cifar10.y_test),
-        "rnn"
+        "rnn",
+        std_logs=True
     )

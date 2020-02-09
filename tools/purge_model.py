@@ -1,3 +1,7 @@
+"""
+Delete all files from a process name
+"""
+
 import sys
 from src.helper import Helper
 

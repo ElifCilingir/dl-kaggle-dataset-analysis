@@ -1,8 +1,10 @@
+"""
+Launch tensorboard server and add a tab in the user's favorite browser.
+"""
 import os
-import webbrowser
 
 try:
-    os.system("start "  + os.path.realpath(os.getcwd()) + "\\tools\\html\\tb.html")
+    os.system("start " + os.path.realpath(os.getcwd()) + "\\tools\\html\\tb.html")
 except Exception:
     print("Error: impossible to open the default browser please submit a pull request if you see this error")
 

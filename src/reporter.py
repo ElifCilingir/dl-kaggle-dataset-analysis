@@ -17,14 +17,24 @@ class Reporter(Callback):
             self.hp_log_title = ""
 
     def on_train_begin(self, logs=None):
+        """
+        Write the header of the current trained model log file on train begin
+        :param logs:
+        :return:
+        """
         f = open(self.log_file_path, "a")
         f.write(f"{'=' * 5}{self.model_name}({self.hp_log_title}){'=' * 5}\n")
         f.close()
 
     def on_epoch_end(self, epoch, logs=None):
+        """
+        Write in a the current trained model log file on epoch end
+        :param epoch:
+        :param logs:
+        :return:
+        """
         if logs:
             self.epoch_iter += 1
-            # (loss, acc) = self.model.evaluate(self.x_train, self.y_train, batch_size=self.batch_size)
             f = open(self.log_file_path, "a")
             f.write("ep {} - "
                     "l: {} ; "
@@ -37,4 +47,9 @@ class Reporter(Callback):
             f.close()
 
     def on_train_end(self, logs=None):
+        """
+        Reinitialize values for the next scenario if the same Reporter object is used
+        :param logs:
+        :return:
+        """
         self.epoch_iter = 0

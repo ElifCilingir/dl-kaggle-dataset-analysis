@@ -1,9 +1,3 @@
-"""
-The Tuner class is here to automatically generate model generation scenarios present in the src/scenarios/ folder
-The number of epochs for each scenarios is equal to 100.
-TODO add multiple class extending from a Tuner interface to avoid too much if else statements
-TODO e.g. MlpTuner() or ResnetTuner() with hyperparameters lists as constructor params
-"""
 import importlib
 import os
 
@@ -12,6 +6,12 @@ from src.helper import Helper
 
 
 class Tuner:
+    """
+    The Tuner class is here to automatically generate model generation scenarios present in the src/scenarios/ folder
+    The number of epochs for each scenarios is equal to 100.
+    TODO add multiple class extending from a Tuner interface to avoid too much if else statements
+    TODO e.g. MlpTuner() or ResnetTuner() with hyperparameters lists as constructor params
+    """
     def __init__(
             self,
             process_name=None,
@@ -71,6 +71,16 @@ class Tuner:
             n_neurons_v,
             dropout_v
     ):
+        """
+        Write RNN hyperparameters in a scenario file
+        :param scenario_file:
+        :param n_layers:
+        :param optimizer:
+        :param batch_size:
+        :param n_neurons_v:
+        :param dropout_v:
+        :return:
+        """
         scenario_file.write(f"{n_layers},{n_neurons_v},{dropout_v},{optimizer},{batch_size}\n")
 
     @staticmethod
@@ -84,10 +94,31 @@ class Tuner:
             kernel_size,
             batch_size
     ):
+        """
+        Write ResNet hyperparameters in a scenario file
+        :param scenario_file:
+        :param n_resblock_v:
+        :param dropout_v:
+        :param h_filters_v:
+        :param l_fiters_v:
+        :param n_neurons_v:
+        :param kernel_size:
+        :param batch_size:
+        :return:
+        """
         scenario_file.write(
             f"{n_resblock_v},{dropout_v},{h_filters_v},{l_fiters_v},{n_neurons_v},{kernel_size},{batch_size}\n")
 
     def mlp_write(self, scenario_file, dropout, optimizer, activation_function, batch_size):
+        """
+        Write MLP hyperparameters in a scenario file
+        :param scenario_file:
+        :param dropout:
+        :param optimizer:
+        :param activation_function:
+        :param batch_size:
+        :return:
+        """
         if dropout == "DropoutDescending":
             scenario_file.write(f"{dropout}{Helper.list_to_str_semic(self.dropout_values)},"
                                 f"{optimizer},{activation_function},{batch_size}\n")
@@ -102,6 +133,18 @@ class Tuner:
 
     def convnet_write(self, scenario_file, dropout, optimizer, activation_function, batch_size, filter_size,
                       padding_value, kernel_size):
+        """
+        Write ConvNet hyperparameters in a scenario file
+        :param scenario_file:
+        :param dropout:
+        :param optimizer:
+        :param activation_function:
+        :param batch_size:
+        :param filter_size:
+        :param padding_value:
+        :param kernel_size:
+        :return:
+        """
         if dropout == "DropoutDescending":
             scenario_file.write(f"{dropout}{Helper.list_to_str_semic(self.dropout_values)},"
                                 f"{optimizer},{activation_function},{batch_size},"
@@ -117,6 +160,11 @@ class Tuner:
                 f",{padding_value},{kernel_size}\n")
 
     def inspect_scenario(self, scenario_name):
+        """
+        Display every line of a scenario file
+        :param scenario_name:
+        :return:
+        """
         scenario_file_path = self.src_path + "\\scenarios\\" + self.process_name + "\\" + scenario_name + ".csv"
         try:
             scenario_file = open(scenario_file_path, "r")
@@ -126,6 +174,11 @@ class Tuner:
             print(f"Couldn't open {scenario_file_path}")
 
     def create_scenario(self, scenario_name):
+        """
+        Create a scenario from the hyperparameters given in a Tuner() constructor
+        :param scenario_name:
+        :return:
+        """
         Helper.create_dir(self.src_path + "\\scenarios")
         Helper.create_dir(self.src_path + "\\scenarios\\" + self.process_name)
         scenario_file_path = self.src_path + "\\scenarios\\" + self.process_name + "\\" + scenario_name + ".csv"
@@ -187,6 +240,12 @@ class Tuner:
 
     @staticmethod
     def filter_dropout(dropout_str):
+        """
+        Parse dropout values from a scenario file
+        TODO Change it so we don't need to parse too much (remove "[" and "]")
+        :param dropout_str:
+        :return:
+        """
         if "[" in dropout_str:
             (dropout_type, dropout_values) = dropout_str.split("[")
             dropout_values = dropout_values.replace("]", "").split(";")[:-1]
@@ -205,6 +264,19 @@ class Tuner:
             resume_at=None,
             test=False
     ):
+        """
+        Launch a scenario of trainings
+        :param process_name:
+        :param scenario_name:
+        :param x_train:
+        :param y_train:
+        :param x_test:
+        :param y_test:
+        :param epochs:
+        :param resume_at:
+        :param test:
+        :return:
+        """
         scenario_file_path = self.src_path + "\\scenarios\\" + process_name + "\\" + scenario_name + ".csv"
         scenario_file = open(scenario_file_path, "r")
         process = importlib.import_module("src.models.processes." + process_name)
@@ -300,7 +372,10 @@ class Tuner:
 
     @staticmethod
     def mlp_tuner():
-        # Create tuner
+        """
+        MLP scenario creation method
+        :return:
+        """
         mlp_tuner = Tuner(
             "mlp",
             dropouts=["NoDropout", "DropoutDescending", "DropoutConstant"],
@@ -315,6 +390,10 @@ class Tuner:
 
     @staticmethod
     def convnet_tuner():
+        """
+        ConvNet scenario creation method
+        :return:
+        """
         # Create tuner
         convnet_tuner = Tuner(
             "convnet",
@@ -336,6 +415,10 @@ class Tuner:
 
     @staticmethod
     def mlp_scenario_launcher():
+        """
+        Launch a standard MLP scenario
+        :return:
+        """
         cifar10 = Cifar10(dim=1)
         tuner = Tuner()
         tuner.launch_scenario(
@@ -350,6 +433,10 @@ class Tuner:
 
     @staticmethod
     def convnet_scenario_launcher():
+        """
+        Launch a standard ConvNet Scenario
+        :return:
+        """
         cifar10 = Cifar10(dim=3)
         tuner = Tuner()
         tuner.launch_scenario(
@@ -363,6 +450,13 @@ class Tuner:
         )
 
     def show_model(self, name, id):
+        """
+        Show every line of a model from its name and id
+        TODO Replace to fuse name and id to follow a new convention
+        :param name:
+        :param id:
+        :return:
+        """
         model_log_file = f"{self.src_path}\\models\\logs\\{name}_{id}.log"
         f = open(model_log_file, "r")
         for line in f:
@@ -371,6 +465,15 @@ class Tuner:
 
     @staticmethod
     def resume_scenario(process_name, scenario_file_name, epoch, n_line, dim=1):
+        """
+        Resume the scenario at a given line in case of crash
+        :param process_name:
+        :param scenario_file_name:
+        :param epoch:
+        :param n_line:
+        :param dim:
+        :return:
+        """
         cifar10 = Cifar10(dim=dim)
         tuner = Tuner()
         tuner.launch_scenario(
@@ -421,7 +524,25 @@ if __name__ == "__main__":
     #     100
     # )
 
-    tuner = Tuner()
+    cifar10 = Cifar10(dim=3)
+    tuner = Tuner(
+        process_name="mlp",
+        dropouts=["NoDropout", "DropoutDescending", "DropoutAscending"],
+        dropout_values=[0.5, 0.4, 0.3],
+        optimizers=["SGD", "Adam", "Adamax"],
+        activation_functions=["relu", "tanh"],
+        batch_sizes=[32, 64, 128]
+    )
+    tuner.create_scenario("scenario_1")
+    tuner.launch_scenario(
+        "mlp",
+        "scenario_1",
+        cifar10.x_train,
+        cifar10.y_train,
+        cifar10.x_test,
+        cifar10.y_test,
+        epochs=100
+    )
     # tuner.create_scenario("rnn_scenario")
     cifar10 = Cifar10(dim=2)
     tuner.launch_scenario(

@@ -1,3 +1,7 @@
+"""
+Create a new conda environment
+"""
+
 import os
 
 if __name__ == "__main__":
